@@ -1,53 +1,44 @@
-import React, { Component } from 'react';
-
-class List extends Component {
+import React, { useState,useEffect } from "react";
+import CardList from "./cardList";
+import Pagination from "./Pagination"
+import axios from 'axios';
+import "./list.css";
+const List =() => {
   // Initialize the state
-  constructor(props){
-    super(props);
-    this.state = {
-      list: []
-    }
-  }
-
+  const[list,setList]=useState([]);
+  const[currentPage,setCurrentPage]=useState(1);
+  const [postPerPage]=useState(3);
   // Fetch the list on first mount
-  componentDidMount() {
-    this.getList();
-  }
-
+  useEffect(()=>{
+    const fetchList = async()=>{
+      const res = await axios.get("/api/getList");
+      setList(res.data)
+    }
+    fetchList();
+  },[])
+  
+const indexOfLastPost=currentPage*postPerPage;
+const indexOfFirstPost=indexOfLastPost-postPerPage;
+const currentPost=list.slice(indexOfFirstPost,indexOfLastPost);
   // Retrieves the list of items from the Express app
-  getList = () => {
-    fetch('/api/getList')
-    .then(res => res.json())
-    .then(list => this.setState({ list }))
-  }
-
-  render() {
-    const { list } = this.state;
-
-    return (
+ 
+  const paginate = pageNumber =>setCurrentPage(pageNumber);
+    return !list.length ? (
+      <h1>Loading</h1>
+    ) : (
       <div className="App">
-        <h1>List of Items</h1>
-        {/* Check to see if any items are found*/}
-        {list.length ? (
-          <div>
-            {/* Render the list of items */}
-            {list.map((item) => {
-              return(
-                <div>
-                  {item}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div>
-            <h2>No List Items Found</h2>
-          </div>
-        )
-      }
+        <h1>List of Employees</h1>
+
+        <CardList list={currentPost} />
+        {/*<button onClick={()=>setCurrentPage(currentPage+1)}>More</button>*/}
+        <Pagination
+        postsPerPage={postPerPage}
+        totalPosts={list.length}
+       paginate={paginate}
+      />
       </div>
     );
   }
-}
+
 
 export default List;
